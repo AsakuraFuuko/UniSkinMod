@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class SkinCore implements IFMLLoadingPlugin{
     public static boolean ObfuscatedEnv=true;
     private static SkinCore instance=null;
     private List<String> RootURLs =new ArrayList<String>();
-    private static final String CFG_VER_STR="Version: 2";
+    private static final String CFG_VER_STR="Version: 3";
     private static String SkinCachePath="";
 
     public SkinCore(){
@@ -138,7 +139,9 @@ public class SkinCore implements IFMLLoadingPlugin{
                 bw.write("# Root: http://127.0.0.1:25566/skins");bw.newLine();
                 bw.newLine();
                 bw.write("# SkinMe Default");bw.newLine();
-                bw.write("Root: http://www.skinme.cc/uniskin");bw.newLine();
+                bw.write("Root: http://skins.minecraft.net");bw.newLine();
+//                bw.write("Root: http://s3.amazonaws.com");bw.newLine();
+                bw.write("Root: http://www.skinme.cc:88");bw.newLine();
                 bw.flush();bw.close();fw.close();
             }
         }catch(IOException e){
@@ -188,18 +191,22 @@ public class SkinCore implements IFMLLoadingPlugin{
     public static void injectTexture(HashMap<MinecraftProfileTexture.Type, MinecraftProfileTexture> map,GameProfile profile){
         LogManager.getLogger("UniSkinMod").info("Injecting Skin Data for Player: " + profile.getName());
 
-        if (map.containsKey(MinecraftProfileTexture.Type.CAPE)&&map.containsKey(MinecraftProfileTexture.Type.SKIN))
-            return;
+        for (Object key : map.keySet()) {
+            LogManager.getLogger("UniSkinMod").info(key + " : " + map.get(key));
+        }
+
         final playerSkinData data=getInstance().getPlayerData(profile.getName());
+
         if (data==null) return;
 
         if(!(map.containsKey(MinecraftProfileTexture.Type.CAPE))&&data.cape != null){
             map.put(MinecraftProfileTexture.Type.CAPE,constructTexture(data.cape));
-            LogManager.getLogger("UniSkinMod").debug("Cape Injected");
+            LogManager.getLogger("UniSkinMod").info("Cape Injected");
         }
+
         if(!(map.containsKey(MinecraftProfileTexture.Type.SKIN))&&data.skin != null){
             map.put(MinecraftProfileTexture.Type.SKIN,constructTexture(data.skin));
-            LogManager.getLogger("UniSkinMod").debug("Skin Injected");
+            LogManager.getLogger("UniSkinMod").info("Skin Injected");
         }
     }
 
@@ -221,7 +228,7 @@ public class SkinCore implements IFMLLoadingPlugin{
             }
         }
 
-        LogManager.getLogger("UniSkinMod").debug("Using " +(legacy ? "old" : "new")+ " constructor of authlib.");
+        LogManager.getLogger("UniSkinMod").info("Using " + (legacy ? "old" : "new") + " constructor of authlib.");
 
         if (con==null)return null;
         try {
@@ -250,7 +257,7 @@ public class SkinCore implements IFMLLoadingPlugin{
                         if (skin==null) skin = api.getSkinURL();
                         if (cape==null) cape = api.getCapeURL();
                     }
-                    return new playerSkinData(skin,cape,"default");
+                    return new playerSkinData(skin, cape,"default");
                 }
             });
         }catch(Exception ex){
